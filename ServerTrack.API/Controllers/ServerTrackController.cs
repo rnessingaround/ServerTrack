@@ -102,7 +102,7 @@ namespace ServerTrack.API.Controllers
 
 
         [Route("recordload")]
-        public IHttpActionResult PostServerLoad(string serverName, string cpuLoad, string ramLoad)
+        public IHttpActionResult PostRecordLoad(string serverName, string cpuLoad, string ramLoad)
         {
             if (!String.IsNullOrEmpty(serverName))
             {
@@ -127,7 +127,7 @@ namespace ServerTrack.API.Controllers
         }
         
         [Route("recordload/{servername}/{cpuLoad}/{ramLoad}")]
-        public IHttpActionResult GetServerLoad(string serverName, string cpuLoad, string ramLoad)
+        public IHttpActionResult GetRecordLoad(string serverName, string cpuLoad, string ramLoad)
         {
             if (String.IsNullOrEmpty(serverName))
             {
