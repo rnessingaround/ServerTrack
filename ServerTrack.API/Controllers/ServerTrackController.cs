@@ -98,33 +98,32 @@ namespace ServerTrack.API.Controllers
             }
         }
 
-        
-
 
         [Route("recordload")]
-        public IHttpActionResult PostRecordLoad(string serverName, string cpuLoad, string ramLoad)
+        public IHttpActionResult PostRecordLoad([FromBody]ServerLoad sl)
         {
-            if (!String.IsNullOrEmpty(serverName))
+            if (!String.IsNullOrEmpty(sl.ServerName))
             {
                 return new ResponseMessageResult(Request.CreateErrorResponse(HttpStatusCode.NotFound, "SERVER_NAME_IS_EMPTY"));
             }
 
             double outCPULoad = 0;
-            if(!double.TryParse(cpuLoad, out outCPULoad))
+            if (!double.TryParse(sl.CPULoad.ToString(), out outCPULoad))
             {
                 return new ResponseMessageResult(Request.CreateErrorResponse(HttpStatusCode.NotFound, "CPULOAD_NOT_DOUBLE"));
             }
-            
+
             double outRAMLoad = 0;
-            if (!double.TryParse(ramLoad, out outRAMLoad))
+            if (!double.TryParse(sl.RAMLoad.ToString(), out outRAMLoad))
             {
                 return new ResponseMessageResult(Request.CreateErrorResponse(HttpStatusCode.NotFound, "RAMLOAD_NOT_DOUBLE"));
             }
 
-            AddServerHistory(serverName, outCPULoad, outRAMLoad);
+            AddServerHistory(sl.ServerName, outCPULoad, outRAMLoad);
 
             return Ok();
         }
+
         
         [Route("recordload/{servername}/{cpuLoad}/{ramLoad}")]
         public IHttpActionResult GetRecordLoad(string serverName, string cpuLoad, string ramLoad)
@@ -151,7 +150,7 @@ namespace ServerTrack.API.Controllers
             return Ok();
         }
 
-        
+
         private void AddServerHistory(string serverName, double outCPULoad, double outRAMLoad)
         {
             ServerLoad sl = new ServerLoad();
