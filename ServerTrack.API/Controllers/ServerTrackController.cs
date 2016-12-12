@@ -99,60 +99,85 @@ namespace ServerTrack.API.Controllers
         }
 
 
-        [Route("recordload")]
-        public IHttpActionResult PostRecordLoad([FromBody]ServerLoad sl)
+        [Route("serverload")]
+        public IHttpActionResult PostServerLoad(ServerLoad sl)
         {
-            if (!String.IsNullOrEmpty(sl.ServerName))
+            ResponseMessageResult rmr = null;
+
+            if (IsDataValid(sl.ServerName, sl.CPULoad.ToString(), sl.RAMLoad.ToString(), out rmr))
             {
-                return new ResponseMessageResult(Request.CreateErrorResponse(HttpStatusCode.NotFound, "SERVER_NAME_IS_EMPTY"));
+                return rmr;
             }
 
-            double outCPULoad = 0;
-            if (!double.TryParse(sl.CPULoad.ToString(), out outCPULoad))
-            {
-                return new ResponseMessageResult(Request.CreateErrorResponse(HttpStatusCode.NotFound, "CPULOAD_NOT_DOUBLE"));
-            }
-
-            double outRAMLoad = 0;
-            if (!double.TryParse(sl.RAMLoad.ToString(), out outRAMLoad))
-            {
-                return new ResponseMessageResult(Request.CreateErrorResponse(HttpStatusCode.NotFound, "RAMLOAD_NOT_DOUBLE"));
-            }
-
-            AddServerHistory(sl.ServerName, outCPULoad, outRAMLoad);
+            AddServerHistory(sl.ServerName, sl.CPULoad, sl.RAMLoad);
 
             return Ok();
         }
 
-        
-        [Route("recordload/{servername}/{cpuLoad}/{ramLoad}")]
-        public IHttpActionResult GetRecordLoad(string serverName, string cpuLoad, string ramLoad)
+
+        //This is for testing (use the browsers to populate test data) and should be removed for a production environment
+        [Route("serverload/{servername}/{cpuLoad}/{ramLoad}")]
+        public IHttpActionResult GetServerLoad(string serverName, string cpuLoad, string ramLoad)
         {
+            ResponseMessageResult rmr = null;
+            
+            if (IsDataValid(serverName, cpuLoad, ramLoad, out rmr))
+            {
+                return rmr;
+            }
+
+            AddServerHistory(serverName, double.Parse(cpuLoad), double.Parse(ramLoad));
+
+            return Ok();
+        }
+
+        private bool IsDataValid(string serverName, string cpuLoad, string ramLoad, out ResponseMessageResult responseMessageResult)
+        {
+            bool returnVal = true;
+            string responseMessageResultMessage = string.Empty;
+
             if (String.IsNullOrEmpty(serverName))
             {
-                return new ResponseMessageResult(Request.CreateErrorResponse(HttpStatusCode.NotFound, "SERVER_NAME_IS_EMPTY"));
+                returnVal = false;
+                responseMessageResultMessage =  "SERVER_NAME_IS_EMPTY";
             }
 
             double outCPULoad = 0;
             if (!double.TryParse(cpuLoad, out outCPULoad))
             {
-                return new ResponseMessageResult(Request.CreateErrorResponse(HttpStatusCode.NotFound, "CPU_LOAD_NOT_DOUBLE"));
+                returnVal = false;
+                if (string.IsNullOrEmpty(responseMessageResultMessage))
+                {
+                    responseMessageResultMessage =  "CPU_LOAD_NOT_DOUBLE";
+                }
+                else
+                {
+                    responseMessageResultMessage = string.Format("{0},{1}",responseMessageResultMessage,"CPU_LOAD_NOT_DOUBLE");
+                }
             }
 
             double outRAMLoad = 0;
             if (!double.TryParse(ramLoad, out outRAMLoad))
             {
-                return new ResponseMessageResult(Request.CreateErrorResponse(HttpStatusCode.NotFound, "RAM_LOAD_NOT_DOUBLE"));
+                returnVal = false;
+                if (string.IsNullOrEmpty(responseMessageResultMessage))
+                {
+                    responseMessageResultMessage = "CPU_LOAD_NOT_DOUBLE";
+                }
+                else
+                {
+                    responseMessageResultMessage = string.Format("{0},{1}", responseMessageResultMessage, "RAM_LOAD_NOT_DOUBLE");
+                }
             }
 
-            AddServerHistory(serverName, outCPULoad, outRAMLoad);
+            responseMessageResult = new ResponseMessageResult(Request.CreateErrorResponse(HttpStatusCode.NotFound, "responseMessageResultMessage"));
 
-            return Ok();
+            return returnVal;
         }
-
 
         private void AddServerHistory(string serverName, double outCPULoad, double outRAMLoad)
         {
+
             ServerLoad sl = new ServerLoad();
             sl.ServerName = serverName;
             sl.CPULoad = outCPULoad;
